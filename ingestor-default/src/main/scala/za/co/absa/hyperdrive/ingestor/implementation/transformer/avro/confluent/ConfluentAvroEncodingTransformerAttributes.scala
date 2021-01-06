@@ -47,4 +47,6 @@ trait ConfluentAvroEncodingTransformerAttributes extends HasComponentAttributes 
     KEY_SCHEMA_REGISTRY_KEY_RECORD_NAME -> PropertyMetadata("Key-Record name", Some("Key-Record name for naming strategies record.name or topic.record.name"), required = false),
     KEY_SCHEMA_REGISTRY_KEY_RECORD_NAMESPACE -> PropertyMetadata("Key-Record namespace", Some("Key-Record namespace for naming strategies record.name or topic.record.name"), required = false)
   )
+
+  override def getExtraConfigurationPrefix: Option[String] = Some("schema.registry.option")
 }

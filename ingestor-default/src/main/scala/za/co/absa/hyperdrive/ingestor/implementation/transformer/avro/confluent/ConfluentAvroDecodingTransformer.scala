@@ -109,6 +109,7 @@ object ConfluentAvroDecodingTransformer extends StreamTransformerFactory with Co
   object SchemaConfigKeys extends SchemaRegistryConsumerConfigKeys {
     override val topic: String = KEY_TOPIC
     override val schemaRegistryUrl: String = KEY_SCHEMA_REGISTRY_URL
+    override val schemaRegistryOptionsPrefix: String = getExtraConfigurationPrefix.get
     override val schemaId: String = KEY_SCHEMA_REGISTRY_VALUE_SCHEMA_ID
     override val namingStrategy: String = KEY_SCHEMA_REGISTRY_VALUE_NAMING_STRATEGY
     override val recordName: String = KEY_SCHEMA_REGISTRY_VALUE_RECORD_NAME

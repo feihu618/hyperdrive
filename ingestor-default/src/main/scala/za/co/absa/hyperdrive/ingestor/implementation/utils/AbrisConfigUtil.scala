@@ -21,6 +21,7 @@ import org.apache.spark.sql.catalyst.expressions.Expression
 import za.co.absa.abris.avro.read.confluent.SchemaManagerFactory
 import za.co.absa.abris.avro.registry.SchemaSubject
 import za.co.absa.abris.config.{AbrisConfig, FromAvroConfig, ToAvroConfig}
+import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils
 import za.co.absa.hyperdrive.ingestor.api.utils.ConfigUtils.getOrThrow
 
 private[hyperdrive] object AbrisConfigUtil {
@@ -57,7 +58,7 @@ private[hyperdrive] object AbrisConfigUtil {
       fromConfluentAvroConfigFragment.downloadReaderSchemaById(schemaId.toInt)
     }
 
-    fromSchemaRegisteringConfigFragment.usingSchemaRegistry(getSchemaRegistryUrl(configuration, configKeys))
+    fromSchemaRegisteringConfigFragment.usingSchemaRegistry(getSchemaRegistryConfig(configuration, configKeys))
   }
 
   def getKeyProducerSettings(configuration: Configuration, configKeys: SchemaRegistryProducerConfigKeys, expression: Expression): ToAvroConfig =
@@ -67,7 +68,7 @@ private[hyperdrive] object AbrisConfigUtil {
     getProducerSettings(configuration, configKeys, isKey = false, expression)
 
   private def getProducerSettings(configuration: Configuration, configKeys: SchemaRegistryProducerConfigKeys, isKey: Boolean, expression: Expression): ToAvroConfig = {
-    val schemaManager = SchemaManagerFactory.create(Map(AbrisConfig.SCHEMA_REGISTRY_URL -> getSchemaRegistryUrl(configuration, configKeys)))
+    val schemaManager = SchemaManagerFactory.create(getSchemaRegistryConfig(configuration, configKeys))
     val topic = getTopic(configuration, configKeys)
     val namingStrategy = getNamingStrategy(configuration, configKeys)
     val schemaId = namingStrategy match {
@@ -91,7 +92,7 @@ private[hyperdrive] object AbrisConfigUtil {
     AbrisConfig
       .toConfluentAvro
       .downloadSchemaById(schemaId)
-      .usingSchemaRegistry(getSchemaRegistryUrl(configuration, configKeys))
+      .usingSchemaRegistry(getSchemaRegistryConfig(configuration, configKeys))
   }
 
   private def getTopic(configuration: Configuration, configKeys: SchemaRegistryConfigKeys): String =
@@ -109,6 +110,9 @@ private[hyperdrive] object AbrisConfigUtil {
   private def getRecordNamespace(configuration: Configuration, configKeys: SchemaRegistryConfigKeys) =
     getOrThrow(configKeys.recordNamespace, configuration, errorMessage = s"Record namespace not specified for value. Is '${configKeys.recordNamespace}' configured?")
 
-  private def getSchemaRegistryUrl(configuration: Configuration, configKeys: SchemaRegistryConfigKeys) =
-    getOrThrow(configKeys.schemaRegistryUrl, configuration, errorMessage = s"Schema Registry URL not specified. Is '${configKeys.schemaRegistryUrl}' configured?")
+  private def getSchemaRegistryConfig(configuration: Configuration, configKeys: SchemaRegistryConfigKeys) = {
+    val url = getOrThrow(configKeys.schemaRegistryUrl, configuration, errorMessage = s"Schema Registry URL not specified. Is '${configKeys.schemaRegistryUrl}' configured?")
+    ConfigUtils.getPropertySubset(configuration, configKeys.schemaRegistryOptionsPrefix) ++
+    Map(AbrisConfig.SCHEMA_REGISTRY_URL -> url)
+  }
 }
